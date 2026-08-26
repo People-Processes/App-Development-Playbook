@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Collaboration SOP · People Processes</title>
+<meta name="description" content="The working agreement between the spec writer and the developer: roles, handoffs, async cadence, escalation and AI-pairing rules.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════ TOKENS ═══════════════ */
+:root{
+  /* brand + fun palette */
+  --lime:#84C444;   --lime-d:#5E9B27;  --lime-l:#EDF8DC;
+  --mint:#10B981;   --mint-l:#DCFCE7;
+  --cyan:#0EA5E9;   --cyan-l:#E0F2FE;
+  --violet:#8B5CF6; --violet-l:#EDE9FE;
+  --pink:#EC4899;   --pink-l:#FCE7F3;
+  --coral:#F5533D;  --coral-l:#FFE4E0;
+  --amber:#F59E0B;  --amber-l:#FEF3C7;
+  --navy:#151A28;   --ink:#111827;  --gray:#5B6472;  --muted:#8A93A0;
+  --line:#E7EAEE;   --paper:#FFFFFF; --wash:#F7F9FB; --code:#F3F6F9;
+
+  --acc:var(--lime); --acc-l:var(--lime-l); --acc-d:var(--lime-d);
+
+  /* spacing scale — every gap in the doc comes from here */
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px;
+  --s6:32px; --s7:48px; --s8:64px; --s9:88px;
+
+  --r1:8px; --r2:14px; --r3:22px; --r4:999px;
+  --sh1:0 1px 2px rgba(21,26,40,.05);
+  --sh2:0 4px 14px rgba(21,26,40,.07);
+  --sh3:0 14px 40px rgba(21,26,40,.12);
+  --font:'Poppins',Arial,'Helvetica Neue',Helvetica,sans-serif;
+  --mono:'SF Mono',ui-monospace,Consolas,Menlo,monospace;
+  --top:60px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:var(--font);color:var(--ink);background:var(--paper);
+  -webkit-font-smoothing:antialiased;font-size:15.5px;line-height:1.7}
+h1,h2,h3,h4{letter-spacing:-.015em;margin:0}
+p{margin:0 0 var(--s3)}
+a{color:var(--acc-d)}
+code{font-family:var(--mono);font-size:.86em;background:var(--code);color:#2F6B18;
+  padding:2px 7px;border-radius:6px;white-space:nowrap}
+
+/* ═══════════════ CHROME ═══════════════ */
+#bar{position:fixed;top:0;left:0;height:4px;width:0;z-index:100;
+  background:linear-gradient(90deg,var(--lime),var(--cyan),var(--violet),var(--pink));
+  transition:width .12s linear}
+.topbar{position:sticky;top:0;z-index:60;height:var(--top);
+  background:rgba(255,255,255,.93);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:var(--s4);padding:0 var(--s5)}
+.brand{font-weight:800;font-size:17px;white-space:nowrap;display:flex;align-items:center;gap:9px}
+.brand .dot{width:11px;height:11px;border-radius:50%;
+  background:linear-gradient(135deg,var(--lime),var(--mint));box-shadow:0 0 0 4px var(--lime-l)}
+.brand span{color:var(--lime-d)}
+.doctitle{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip-v{margin-left:auto;font-size:11px;font-weight:700;color:#fff;
+  background:linear-gradient(135deg,var(--lime),var(--mint));
+  padding:5px 14px;border-radius:var(--r4);white-space:nowrap;box-shadow:var(--sh1)}
+#menubtn{display:none;background:#fff;border:1px solid var(--line);border-radius:var(--r1);
+  padding:7px 12px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer}
+
+/* ═══════════════ LAYOUT ═══════════════ */
+.shell{display:grid;grid-template-columns:286px minmax(0,1fr);max-width:1460px;margin:0 auto}
+.side{position:sticky;top:var(--top);align-self:start;height:calc(100vh - var(--top));
+  overflow-y:auto;border-right:1px solid var(--line);padding:var(--s5) var(--s4) var(--s9);
+  background:var(--wash)}
+.progwrap{display:flex;align-items:center;gap:var(--s3);padding:var(--s3);margin-bottom:var(--s4);
+  background:#fff;border:1px solid var(--line);border-radius:var(--r2);box-shadow:var(--sh1)}
+.progwrap .lbl{font-size:11.5px;color:var(--muted);line-height:1.35}
+.progwrap .lbl b{display:block;font-size:13px;color:var(--ink)}
+.searchbox{width:100%;font-family:var(--font);font-size:13.5px;padding:11px 14px;
+  border:1.5px solid var(--line);border-radius:var(--r2);margin-bottom:var(--s4);
+  outline:none;background:#fff;transition:.15s}
+.searchbox:focus{border-color:var(--lime);box-shadow:0 0 0 4px var(--lime-l)}
+.navlink{display:flex;gap:10px;align-items:center;text-decoration:none;color:var(--gray);
+  font-size:13.5px;padding:8px 11px;border-radius:var(--r1);margin-bottom:2px;transition:.14s}
+.navlink .n{flex:none;width:26px;height:22px;display:grid;place-items:center;border-radius:6px;
+  font-size:11px;font-weight:700;background:#fff;border:1px solid var(--line);color:var(--muted)}
+.navlink:hover{background:#fff;color:var(--ink)}
+.navlink.seen .n{background:var(--lime-l);border-color:#CDE8A8;color:var(--lime-d)}
+.navlink.active{background:#fff;color:var(--ink);font-weight:600;box-shadow:var(--sh1)}
+.navlink.active .n{background:var(--lime);border-color:var(--lime);color:#fff}
+.main{padding:var(--s6) var(--s7) var(--s9);min-width:0}
+
+/* ═══════════════ SECTIONS ═══════════════ */
+section{scroll-margin-top:calc(var(--top) + 12px);padding-block:var(--s7) 0}
+.sechead{display:flex;align-items:center;gap:var(--s3);margin-bottom:var(--s4)}
+.secnum{flex:none;width:44px;height:44px;border-radius:var(--r2);display:grid;place-items:center;
+  font-weight:800;font-size:15px;color:#fff;background:var(--acc);box-shadow:0 6px 16px var(--acc-l)}
+.sectag{font-size:11px;font-weight:700;letter-spacing:2.2px;text-transform:uppercase;color:var(--acc-d)}
+.sechead h2{font-size:29px;font-weight:800;line-height:1.15;margin-top:1px}
+.lead{font-size:17px;color:var(--gray);margin-bottom:var(--s5);max-width:70ch}
+h3{font-size:19px;font-weight:700;margin:var(--s6) 0 var(--s3)}
+h4{font-size:15.5px;font-weight:700;margin:var(--s5) 0 var(--s2);color:var(--navy)}
+ul,ol{margin:0 0 var(--s4);padding-left:22px}
+li{margin:6px 0}
+li::marker{color:var(--acc)}
+hr{border:none;border-top:1px solid var(--line);margin:var(--s7) 0 0}
+
+/* ═══════════════ HERO ═══════════════ */
+.hero{border-radius:var(--r3);overflow:hidden;box-shadow:var(--sh3);margin-bottom:var(--s6)}
+.hero-top{position:relative;padding:var(--s7) var(--s6) var(--s6);color:#fff;overflow:hidden;
+  background:linear-gradient(135deg,#151A28 0%,#1C3A2A 45%,#2F6B18 100%)}
+.blob{position:absolute;border-radius:50%;filter:blur(46px);opacity:.5}
+.b1{width:280px;height:280px;background:var(--lime);top:-110px;right:-40px;animation:float 13s ease-in-out infinite}
+.b2{width:220px;height:220px;background:var(--cyan);bottom:-120px;right:180px;animation:float 17s ease-in-out infinite reverse}
+.b3{width:170px;height:170px;background:var(--violet);top:20px;right:280px;opacity:.35;animation:float 21s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translate(0,0)}50%{transform:translate(-26px,22px)}}
+.hero-top>.z{position:relative;z-index:2}
+.kicker{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:700;
+  letter-spacing:2.5px;text-transform:uppercase;color:#CBEF9E;
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);
+  padding:6px 14px;border-radius:var(--r4);margin-bottom:var(--s4)}
+.hero-top h1{font-size:44px;font-weight:800;line-height:1.05}
+.hero-top h1 em{font-style:normal;
+  background:linear-gradient(135deg,#BEF264,#5EEAD4);-webkit-background-clip:text;
+  background-clip:text;-webkit-text-fill-color:transparent}
+.hero-top .sub{margin:var(--s4) 0 0;color:#C9DFC0;font-size:16px;max-width:60ch}
+.hero-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));background:#fff}
+.hero-meta div{padding:var(--s4) var(--s5);border-right:1px solid var(--line)}
+.hero-meta div:last-child{border-right:none}
+.hero-meta b{display:block;font-size:10px;letter-spacing:1.4px;text-transform:uppercase;
+  color:var(--lime-d);margin-bottom:3px}
+.hero-meta span{font-size:13.5px;font-weight:500}
+
+/* ═══════════════ BLOCKS ═══════════════ */
+.creed{position:relative;margin:0 0 var(--s6);padding:var(--s5) var(--s5) var(--s5) var(--s7);
+  border-radius:var(--r3);background:linear-gradient(135deg,var(--lime-l),#E4F7EE);
+  border:1.5px solid #CFEBAB;font-size:17.5px;font-weight:600;line-height:1.55}
+.creed:before{content:"";position:absolute;left:var(--s5);top:var(--s5);bottom:var(--s5);width:5px;
+  border-radius:3px;background:linear-gradient(180deg,var(--lime),var(--mint))}
+
+.card{border:1px solid var(--line);border-radius:var(--r2);padding:var(--s5);background:#fff;
+  box-shadow:var(--sh1);transition:.18s}
+.card:hover{box-shadow:var(--sh2);transform:translateY(-2px)}
+.card>h4:first-child{margin-top:0}
+.card>*:last-child{margin-bottom:0}
+
+.callout{position:relative;border-radius:var(--r2);padding:var(--s4) var(--s5);margin:0 0 var(--s5);
+  border:1.5px solid;font-size:15px}
+.callout .tag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:1.4px;
+  text-transform:uppercase;margin-bottom:var(--s2);padding:3px 10px;border-radius:var(--r4);color:#fff}
+.callout p:last-child{margin-bottom:0}
+.c-tip{background:var(--lime-l);border-color:#CDE8A8}      .c-tip .tag{background:var(--lime-d)}
+.c-warn{background:var(--amber-l);border-color:#F7D98A}    .c-warn .tag{background:#B45309}
+.c-stop{background:var(--coral-l);border-color:#FBC0B6}    .c-stop .tag{background:var(--coral)}
+.c-info{background:var(--cyan-l);border-color:#B9E3FA}     .c-info .tag{background:#0369A1}
+.c-ai{background:var(--violet-l);border-color:#D5CBFB}     .c-ai .tag{background:#6D28D9}
+
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--s4);margin-bottom:var(--s5)}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(232px,1fr));gap:var(--s4);margin-bottom:var(--s5)}
+
+.tablewrap{overflow-x:auto;margin:0 0 var(--s5);border:1px solid var(--line);
+  border-radius:var(--r2);box-shadow:var(--sh1)}
+table{border-collapse:collapse;width:100%;font-size:13.8px;min-width:540px}
+th{background:var(--navy);color:#fff;text-align:left;font-weight:600;padding:13px 16px;font-size:12.5px;
+  letter-spacing:.2px}
+td{padding:12px 16px;border-top:1px solid var(--line);vertical-align:top}
+tr:nth-child(even) td{background:var(--wash)}
+
+.codewrap{position:relative;margin:0 0 var(--s5)}
+pre{background:var(--navy);border-radius:var(--r2);padding:var(--s5) var(--s5) var(--s5) var(--s5);
+  overflow-x:auto;margin:0;font-size:12.8px;line-height:1.68;box-shadow:var(--sh2)}
+pre code{background:none;color:#DCE6D2;padding:0;font-size:12.8px;white-space:pre}
+.copy{position:absolute;top:12px;right:12px;background:rgba(255,255,255,.1);color:#CBEF9E;
+  border:1px solid rgba(255,255,255,.2);border-radius:var(--r4);padding:5px 15px;
+  font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer;transition:.16s}
+.copy:hover{background:var(--lime);color:#12200A;border-color:var(--lime)}
+.copy.done{background:var(--mint);color:#fff;border-color:var(--mint)}
+
+/* ═══════════════ CSS DIAGRAMS (no overlap, they reflow) ═══════════════ */
+figure{margin:var(--s5) 0 var(--s6);padding:var(--s5);border:1px solid var(--line);
+  border-radius:var(--r3);background:
+    radial-gradient(600px 220px at 15% -10%,var(--acc-l),transparent 65%),#fff;
+  box-shadow:var(--sh1)}
+.fig-title{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--acc-d);
+  font-weight:800;margin:0 0 var(--s4);text-align:center}
+figcaption{font-size:13px;color:var(--muted);margin-top:var(--s4);text-align:center;
+  max-width:62ch;margin-left:auto;margin-right:auto}
+figcaption b{color:var(--acc-d)}
+
+/* chain of nodes with arrows between */
+.chain{display:flex;flex-wrap:wrap;align-items:stretch;justify-content:center;gap:var(--s3)}
+.chain .arrow{flex:none;align-self:center;color:var(--acc);font-size:22px;font-weight:700;
+  line-height:1;padding:0 2px}
+.node{flex:1 1 150px;min-width:150px;max-width:230px;border-radius:var(--r2);padding:var(--s4);
+  background:#fff;border:2px solid var(--line);text-align:center;transition:.18s}
+.node:hover{transform:translateY(-3px);box-shadow:var(--sh2)}
+.node .num{width:30px;height:30px;margin:0 auto var(--s2);border-radius:50%;display:grid;
+  place-items:center;font-weight:800;font-size:13px;color:#fff;background:var(--navy)}
+.node b{display:block;font-size:14.5px;margin-bottom:3px}
+.node small{display:block;font-size:12px;color:var(--muted);line-height:1.45}
+.node.lime{border-color:#CDE8A8;background:var(--lime-l)}   .node.lime .num{background:var(--lime-d)}
+.node.cyan{border-color:#B9E3FA;background:var(--cyan-l)}   .node.cyan .num{background:#0369A1}
+.node.violet{border-color:#D5CBFB;background:var(--violet-l)}.node.violet .num{background:#6D28D9}
+.node.pink{border-color:#F9C4DD;background:var(--pink-l)}   .node.pink .num{background:#BE185D}
+.node.amber{border-color:#F7D98A;background:var(--amber-l)} .node.amber .num{background:#B45309}
+.node.coral{border-color:#FBC0B6;background:var(--coral-l)} .node.coral .num{background:var(--coral)}
+.node.dark{border-color:var(--navy);background:var(--navy);color:#fff}
+.node.dark .num{background:var(--lime);color:var(--navy)}
+.node.dark small{color:#AFC0A6}
+
+/* gate markers above a chain */
+.gaterow{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--s4);margin-bottom:var(--s4)}
+.gatechip{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;
+  background:#fff;border:1.5px dashed var(--acc);color:var(--acc-d);
+  padding:7px 16px;border-radius:var(--r4)}
+.gatechip .d{width:8px;height:8px;border-radius:50%;background:var(--acc);animation:blip 2.2s ease-in-out infinite}
+@keyframes blip{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
+
+/* stacked hierarchy */
+.stack{display:grid;gap:var(--s3)}
+.layer{border-radius:var(--r2);padding:var(--s4) var(--s5);border:2px solid var(--line);background:#fff;
+  display:flex;flex-wrap:wrap;align-items:baseline;gap:var(--s2) var(--s4)}
+.layer .k{font-size:10.5px;font-weight:800;letter-spacing:2px;text-transform:uppercase;
+  padding:4px 11px;border-radius:var(--r4);color:#fff;flex:none}
+.layer .q{font-weight:700;font-size:15px}
+.layer .d{font-size:13px;color:var(--muted);flex:1 1 240px}
+.layer.l1{background:var(--navy);border-color:var(--navy)} .layer.l1 .q{color:#fff}
+.layer.l1 .k{background:var(--lime);color:var(--navy)} .layer.l1 .d{color:#AFC0A6}
+.layer.l2 .k{background:var(--lime-d)} .layer.l2{background:var(--lime-l);border-color:#CDE8A8}
+.layer.l3 .k{background:#0369A1} .layer.l3{background:var(--cyan-l);border-color:#B9E3FA}
+.layer.l4 .k{background:#6D28D9} .layer.l4{background:var(--violet-l);border-color:#D5CBFB}
+.down{text-align:center;color:var(--muted);font-size:19px;line-height:1;margin:-4px 0}
+
+/* kanban strip */
+.kb{display:grid;grid-template-columns:repeat(6,minmax(108px,1fr));gap:var(--s2);
+  min-width:680px}
+.kbscroll{overflow-x:auto;padding-bottom:var(--s2)}
+.kcol{border-radius:var(--r2);border:1.5px solid var(--line);background:var(--wash);
+  padding:var(--s3) var(--s2);min-height:132px}
+.kcol h5{margin:0 0 var(--s2);font-size:11.5px;font-weight:700;text-align:center;color:var(--gray)}
+.kcol.hot{background:var(--lime-l);border-color:#CDE8A8}
+.kcol.hot h5{color:var(--lime-d)}
+.kcol.end{background:var(--navy);border-color:var(--navy)}
+.kcol.end h5{color:#CBEF9E}
+.mini{height:22px;border-radius:6px;background:#fff;border:1px solid var(--line);margin-bottom:6px;
+  display:flex;align-items:center;gap:5px;padding:0 7px}
+.mini i{width:5px;height:12px;border-radius:3px;background:var(--muted);display:block}
+.mini span{font-size:9.5px;color:var(--muted);font-style:normal}
+.mini.live{border-color:var(--lime);box-shadow:0 0 0 3px var(--lime-l);animation:hop 8s ease-in-out infinite}
+.mini.live i{background:var(--lime)}
+.mini.live span{color:var(--ink);font-weight:700}
+@keyframes hop{0%,10%{opacity:1}12%,14%{opacity:.15}16%,96%{opacity:1}100%{opacity:1}}
+.kcap{font-size:10.5px;text-align:center;color:var(--muted);margin-top:4px}
+
+/* decision tree */
+.tree{display:grid;gap:var(--s3);justify-items:center}
+.tq{max-width:520px;width:100%;text-align:center;font-weight:700;font-size:15px;
+  background:var(--navy);color:#fff;padding:var(--s4) var(--s5);border-radius:var(--r2)}
+.branch{display:flex;flex-wrap:wrap;gap:var(--s4);justify-content:center;width:100%}
+.limb{display:flex;flex-direction:column;align-items:center;gap:var(--s2);flex:1 1 210px;max-width:300px}
+.yn{font-size:11px;font-weight:800;letter-spacing:1.4px;padding:3px 12px;border-radius:var(--r4)}
+.yn.y{background:var(--mint-l);color:#047857} .yn.n{background:var(--code);color:var(--gray)}
+.leaf{width:100%;text-align:center;padding:var(--s4);border-radius:var(--r2);border:2px solid;
+  font-weight:800;font-size:17px;letter-spacing:.4px}
+.leaf.bug{background:var(--coral-l);border-color:#FBC0B6;color:var(--coral)}
+.leaf.story{background:var(--lime-l);border-color:#CDE8A8;color:var(--lime-d)}
+.leaf.task{background:var(--cyan-l);border-color:#B9E3FA;color:#0369A1}
+
+/* item anatomy */
+.anat{display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:var(--s4);align-items:start}
+.anat .paper{border:1px solid var(--line);border-radius:var(--r2);overflow:hidden;background:#fff;
+  box-shadow:var(--sh2)}
+.anat .paper .bar{height:6px;background:linear-gradient(90deg,var(--lime),var(--mint))}
+.anat .paper .body{padding:var(--s5)}
+.arow{padding:var(--s3) 0;border-bottom:1px dashed var(--line)}
+.arow:last-child{border-bottom:none}
+.arow .lab{font-size:10px;font-weight:800;letter-spacing:1.5px;color:var(--lime-d);margin-bottom:2px}
+.arow .val{font-size:13px;color:var(--gray)}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:var(--s3)}
+.chips span{font-size:11px;font-weight:700;padding:5px 12px;border-radius:var(--r4);
+  background:var(--lime-l);color:var(--lime-d);border:1px solid #CDE8A8}
+.anot{display:grid;gap:var(--s3)}
+.anot div{font-size:12.5px;color:var(--gray);padding:var(--s3);border-radius:var(--r1);
+  background:var(--wash);border-left:3px solid var(--acc)}
+.anot b{display:block;color:var(--ink);font-size:12.5px}
+
+/* fibonacci scale */
+.scale{display:flex;flex-wrap:wrap;gap:var(--s2);justify-content:center;align-items:flex-end}
+.sc{flex:1 1 96px;max-width:140px;border-radius:var(--r2);padding:var(--s3);text-align:center;
+  border:2px solid #CDE8A8;background:var(--lime-l)}
+.sc .p{font-size:24px;font-weight:800;color:var(--lime-d);line-height:1}
+.sc small{display:block;font-size:11px;color:var(--gray);margin-top:5px;line-height:1.35}
+.sc.hi{background:var(--amber-l);border-color:#F7D98A}   .sc.hi .p{color:#B45309}
+.sc.no{background:var(--coral-l);border-color:#FBC0B6}   .sc.no .p{color:var(--coral)}
+.confbar{margin-top:var(--s4);height:9px;border-radius:5px;overflow:hidden;background:var(--code);
+  display:flex}
+.confbar i{display:block;height:100%}
+.conflab{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:6px}
+
+/* pipeline */
+.pipe{display:flex;flex-wrap:wrap;gap:var(--s3);align-items:stretch;justify-content:center}
+.pipe .arrow{align-self:center;font-size:22px;color:var(--acc);font-weight:700}
+.env{flex:1 1 190px;max-width:250px;border-radius:var(--r2);padding:var(--s4);border:2px solid var(--line);
+  background:#fff}
+.env .k{font-size:10.5px;font-weight:800;letter-spacing:2px;color:var(--muted);margin-bottom:6px}
+.env b{display:block;font-size:16px;margin-bottom:4px}
+.env small{font-size:12px;color:var(--gray);line-height:1.45}
+.env.mid{background:var(--lime-l);border-color:#CDE8A8} .env.mid .k{color:var(--lime-d)}
+.env.live{background:var(--navy);border-color:var(--navy);color:#fff}
+.env.live .k{color:var(--lime)} .env.live small{color:#AFC0A6}
+
+/* spec-vs-code */
+.vs{display:grid;gap:var(--s4)}
+.vsrow{display:flex;flex-wrap:wrap;gap:var(--s3);align-items:center;padding:var(--s4);
+  border-radius:var(--r2);border:1.5px solid var(--line);background:#fff}
+.vsrow .who{flex:none;font-size:10.5px;font-weight:800;letter-spacing:1.6px;color:var(--muted);
+  width:100%;margin-bottom:2px}
+.vsrow .box{flex:1 1 160px;padding:var(--s3) var(--s4);border-radius:var(--r1);text-align:center;
+  font-size:13.5px;font-weight:600;border:1.5px solid var(--line);background:var(--wash)}
+.vsrow .box.hero{background:var(--navy);color:#fff;border-color:var(--navy)}
+.vsrow .box.hero em{display:block;font-style:normal;font-size:11px;color:var(--lime);font-weight:700;margin-top:3px}
+.vsrow .box.gate{background:var(--violet-l);border-color:#D5CBFB;color:#5B21B6}
+.vsrow .arrow{flex:none;color:var(--violet);font-size:20px;font-weight:700}
+
+/* ═══════════════ INTERACTIVE ═══════════════ */
+.play{border-radius:var(--r3);padding:var(--s5);margin:var(--s5) 0 var(--s6);
+  border:2px solid var(--acc);background:linear-gradient(135deg,#fff,var(--acc-l))}
+.play .ptag{display:inline-flex;align-items:center;gap:7px;font-size:10.5px;font-weight:800;
+  letter-spacing:1.6px;text-transform:uppercase;color:#fff;background:var(--acc);
+  padding:4px 13px;border-radius:var(--r4);margin-bottom:var(--s3)}
+.play h4{margin-top:0}
+
+.btn{font-family:var(--font);font-size:13.5px;font-weight:700;padding:11px 26px;border-radius:var(--r4);
+  border:2px solid var(--acc);background:#fff;color:var(--acc-d);cursor:pointer;transition:.16s}
+.btn:hover{background:var(--acc);color:#fff;transform:translateY(-2px);box-shadow:var(--sh2)}
+.btn:active{transform:translateY(0)}
+.btn.ghost{border-color:var(--line);color:var(--gray)}
+.btn.ghost:hover{background:var(--navy);border-color:var(--navy);color:#fff}
+.btnrow{display:flex;flex-wrap:wrap;gap:var(--s2);margin-top:var(--s3)}
+.qtext{font-weight:700;font-size:15.5px;margin-bottom:var(--s3)}
+.result{display:none;margin-top:var(--s4);padding:var(--s4) var(--s5);border-radius:var(--r2);
+  background:#fff;border-left:5px solid var(--acc);box-shadow:var(--sh1)}
+.result.on{display:block;animation:rise .3s cubic-bezier(.2,.8,.3,1)}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.result .big{font-size:21px;font-weight:800;margin-bottom:4px}
+.reset{background:none;border:none;color:var(--acc-d);font-family:var(--font);font-size:12.5px;
+  font-weight:600;cursor:pointer;text-decoration:underline;padding:0;margin-top:var(--s3)}
+
+/* option buttons (title fixer / quiz) */
+.opts{display:grid;gap:var(--s2)}
+.opt{text-align:left;font-family:var(--font);font-size:14px;padding:13px 17px;border-radius:var(--r2);
+  border:2px solid var(--line);background:#fff;cursor:pointer;transition:.15s;line-height:1.45}
+.opt:hover{border-color:var(--acc);background:var(--acc-l)}
+.opt.right{border-color:var(--mint);background:var(--mint-l);font-weight:600}
+.opt.wrong{border-color:var(--coral);background:var(--coral-l)}
+.opt:disabled{cursor:default;transform:none}
+.fb{margin-top:var(--s3);font-size:13.5px;padding:12px 16px;border-radius:var(--r1);display:none}
+.fb.on{display:block;animation:rise .28s ease}
+.fb.good{background:var(--mint-l);color:#065F46}
+.fb.bad{background:var(--coral-l);color:#9A2C1B}
+
+/* flip cards */
+.flips{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:var(--s4);
+  margin-bottom:var(--s5)}
+.flip{perspective:1100px;height:250px;cursor:pointer}
+.flip .in{position:relative;width:100%;height:100%;transition:transform .55s cubic-bezier(.3,.8,.3,1);
+  transform-style:preserve-3d}
+.flip.on .in{transform:rotateY(180deg)}
+.flip .f,.flip .b{position:absolute;inset:0;backface-visibility:hidden;border-radius:var(--r2);
+  padding:var(--s5);border:2px solid;display:flex;flex-direction:column;justify-content:center}
+.flip .b{transform:rotateY(180deg);background:#fff;font-size:13.5px;line-height:1.55}
+.flip .f b{font-size:22px;font-weight:800;display:block;margin-bottom:var(--s2)}
+.flip .f small{font-size:13.5px;line-height:1.5}
+.flip .hint{position:absolute;bottom:12px;left:0;right:0;text-align:center;font-size:10.5px;
+  font-weight:700;letter-spacing:1.2px;opacity:.6}
+.fl-story .f{background:var(--lime-l);border-color:#CDE8A8;color:var(--lime-d)} .fl-story .b{border-color:#CDE8A8}
+.fl-task .f{background:var(--cyan-l);border-color:#B9E3FA;color:#0369A1}       .fl-task .b{border-color:#B9E3FA}
+.fl-bug .f{background:var(--coral-l);border-color:#FBC0B6;color:var(--coral)}  .fl-bug .b{border-color:#FBC0B6}
+
+/* checklists + rings */
+.checkblock{border:2px solid var(--line);border-radius:var(--r3);padding:var(--s5);background:#fff;
+  transition:.25s}
+.checkblock.complete{border-color:var(--mint);box-shadow:0 0 0 5px var(--mint-l)}
+.checkhead{display:flex;align-items:center;gap:var(--s4);margin-bottom:var(--s4)}
+.ring{flex:none}
+.ring circle{transition:stroke-dashoffset .45s cubic-bezier(.3,.9,.3,1)}
+.ring text{font:800 14px var(--font);fill:var(--navy)}
+ul.checklist{list-style:none;padding-left:0;margin:0;display:grid;gap:7px}
+ul.checklist label{display:flex;gap:12px;align-items:flex-start;cursor:pointer;padding:10px 14px;
+  border:1.5px solid var(--line);border-radius:var(--r2);background:#fff;transition:.14s;font-size:14px}
+ul.checklist label:hover{border-color:var(--lime);background:var(--lime-l)}
+ul.checklist input{margin:4px 0 0;accent-color:var(--lime);width:16px;height:16px;flex:none}
+ul.checklist input:checked+span{color:var(--muted);text-decoration:line-through}
+.gate{margin-top:var(--s4);padding:13px 18px;border-radius:var(--r2);font-size:14px;font-weight:700;
+  background:var(--coral-l);color:#9A2C1B;border:1.5px solid #FBC0B6}
+.gate.pass{background:var(--mint-l);color:#065F46;border-color:#A7E9C9}
+
+/* item builder */
+.builder{display:grid;gap:var(--s3)}
+.builder label{font-size:12px;font-weight:700;letter-spacing:.5px;color:var(--gray)}
+.builder input,.builder textarea{width:100%;font-family:var(--font);font-size:14px;padding:11px 14px;
+  border:1.5px solid var(--line);border-radius:var(--r2);outline:none;background:#fff;resize:vertical}
+.builder input:focus,.builder textarea:focus{border-color:var(--acc);box-shadow:0 0 0 4px var(--acc-l)}
+.builder .row{display:grid;gap:var(--s3);grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+
+/* glossary */
+dl.gloss{margin:0;display:grid;gap:var(--s3)}
+dl.gloss>div{border:1px solid var(--line);border-radius:var(--r2);padding:var(--s4) var(--s5);
+  background:#fff;border-left:4px solid var(--line);transition:.16s}
+dl.gloss>div:hover{border-left-color:var(--acc);box-shadow:var(--sh1);transform:translateX(3px)}
+dl.gloss dt{font-weight:800;font-size:15px;color:var(--navy);margin-bottom:5px;
+  display:flex;flex-wrap:wrap;align-items:center;gap:9px}
+dl.gloss dt em{font-style:normal;font-weight:700;font-size:10px;letter-spacing:1.3px;
+  text-transform:uppercase;padding:3px 10px;border-radius:var(--r4)}
+.k-proc{background:var(--lime-l);color:var(--lime-d)}
+.k-code{background:var(--cyan-l);color:#0369A1}
+.k-cont{background:var(--violet-l);color:#6D28D9}
+.k-type{background:var(--coral-l);color:var(--coral)}
+.k-gate{background:var(--amber-l);color:#B45309}
+.k-doc{background:var(--pink-l);color:#BE185D}
+dl.gloss dd{margin:0;font-size:14px;color:#1F2937}
+dl.gloss dd .also{display:block;margin-top:7px;font-size:12.8px;color:var(--muted);
+  padding-top:7px;border-top:1px dashed var(--line)}
+.gfilter{margin-bottom:var(--s4)}
+
+/* confetti */
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:200;overflow:hidden;display:none}
+#confetti.on{display:block}
+.conf{position:absolute;width:9px;height:14px;border-radius:2px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(105vh) rotate(720deg);opacity:0}}
+
+.toTop{position:fixed;right:22px;bottom:22px;border:none;width:46px;height:46px;border-radius:50%;
+  cursor:pointer;font-size:17px;color:#fff;opacity:0;pointer-events:none;transition:.22s;z-index:70;
+  background:linear-gradient(135deg,var(--lime),var(--mint));box-shadow:var(--sh2)}
+.toTop.on{opacity:1;pointer-events:auto}
+.toTop:hover{transform:translateY(-3px)}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  html{scroll-behavior:auto}
+}
+@media print{.side,.topbar,.copy,.toTop,#bar,.play,#confetti{display:none}
+  .shell{grid-template-columns:1fr}.main{padding:0}
+  pre{background:#F3F6F9;border:1px solid #ddd}pre code{color:#111}}
+@media (max-width:1040px){
+  .shell{grid-template-columns:1fr}
+  .side{position:fixed;top:var(--top);left:0;width:284px;z-index:55;background:#fff;
+    transform:translateX(-102%);transition:transform .22s;box-shadow:var(--sh3)}
+  .side.open{transform:translateX(0)}
+  #menubtn{display:block}
+  .main{padding:var(--s5) var(--s4) var(--s8)}
+  .hero-top{padding:var(--s6) var(--s5)}
+  .hero-top h1{font-size:31px}
+  .anat{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  :root{--s7:32px}
+  .hero-top h1{font-size:26px}
+  .sechead h2{font-size:23px}
+  .flip{height:270px}
+}
+
+/* ═══════════════ SITE NAV (multi-page) ═══════════════ */
+.sitenav{display:flex;gap:4px;margin-left:var(--s4)}
+.sitenav a{font-size:13px;font-weight:600;color:var(--gray);text-decoration:none;
+  padding:7px 14px;border-radius:var(--r4);transition:.15s;white-space:nowrap}
+.sitenav a:hover{background:var(--wash);color:var(--ink)}
+.sitenav a.here{background:var(--navy);color:#fff}
+@media (max-width:900px){.sitenav{display:none}}
+
+/* ═══════════════ LANDING ═══════════════ */
+.landing{max-width:1080px;margin:0 auto;padding:var(--s7) var(--s5) var(--s9)}
+.lhero{position:relative;border-radius:var(--r3);overflow:hidden;color:#fff;
+  padding:var(--s9) var(--s7);margin-bottom:var(--s7);box-shadow:var(--sh3);
+  background:linear-gradient(135deg,#151A28 0%,#1C3A2A 45%,#2F6B18 100%)}
+.lhero>.z{position:relative;z-index:2;max-width:660px}
+.lhero h1{font-size:50px;font-weight:800;line-height:1.03}
+.lhero h1 em{font-style:normal;background:linear-gradient(135deg,#BEF264,#5EEAD4);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.lhero p{margin:var(--s4) 0 0;color:#C9DFC0;font-size:17px}
+.cardgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:var(--s4)}
+.bigcard{display:block;text-decoration:none;color:inherit;border:2px solid var(--line);
+  border-radius:var(--r3);padding:var(--s5);background:#fff;box-shadow:var(--sh1);transition:.2s;
+  position:relative;overflow:hidden}
+.bigcard:before{content:"";position:absolute;inset:0 0 auto 0;height:6px;background:var(--acc)}
+.bigcard:hover{transform:translateY(-4px);box-shadow:var(--sh3);border-color:var(--acc)}
+.bigcard .ic{width:46px;height:46px;border-radius:var(--r2);display:grid;place-items:center;
+  font-size:19px;font-weight:800;color:#fff;background:var(--acc);margin:var(--s2) 0 var(--s3)}
+.bigcard h3{margin:0 0 6px;font-size:20px;font-weight:800}
+.bigcard p{margin:0;font-size:14px;color:var(--gray)}
+.bigcard .go{display:inline-block;margin-top:var(--s3);font-size:12.5px;font-weight:700;
+  color:var(--acc-d)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:var(--s3);
+  margin:var(--s7) 0}
+.stat{border:1px solid var(--line);border-radius:var(--r2);padding:var(--s4);text-align:center;
+  background:#fff}
+.stat b{display:block;font-size:27px;font-weight:800;color:var(--lime-d);line-height:1.1}
+.stat span{font-size:12.5px;color:var(--muted)}
+
+/* ═══════════════ DOC PAGE (no sidebar) ═══════════════ */
+.docwrap{max-width:940px;margin:0 auto;padding:var(--s6) var(--s5) var(--s9)}
+.crumb{font-size:12.5px;color:var(--muted);margin-bottom:var(--s4)}
+.crumb a{color:var(--muted);text-decoration:none}
+.crumb a:hover{color:var(--acc-d)}
+.pagefoot{margin-top:var(--s9);padding-top:var(--s5);border-top:1px solid var(--line);
+  display:flex;flex-wrap:wrap;gap:var(--s3);justify-content:space-between;align-items:center;
+  font-size:13px;color:var(--muted)}
+.pagefoot a{font-weight:600;text-decoration:none}
+
+/* ═══════════════ ROLE / HANDOFF BLOCKS ═══════════════ */
+.roles{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:var(--s4);
+  margin-bottom:var(--s5)}
+.role{border:2px solid var(--line);border-radius:var(--r3);padding:var(--s5);background:#fff}
+.role .av{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;
+  font-size:18px;font-weight:800;color:#fff;margin-bottom:var(--s3)}
+.role h4{margin:0 0 2px;font-size:18px}
+.role .who{font-size:12px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
+  color:var(--muted);margin-bottom:var(--s3)}
+.role ul{margin:0;font-size:13.8px;padding-left:20px}
+.role.r-d{border-color:#D5CBFB} .role.r-d .av{background:var(--violet)}
+.role.r-l{border-color:#B9E3FA} .role.r-l .av{background:var(--cyan)}
+.role.r-r{border-color:#CDE8A8} .role.r-r .av{background:var(--lime-d)}
+
+.handoff{border:2px solid var(--line);border-radius:var(--r3);overflow:hidden;margin-bottom:var(--s4);
+  background:#fff}
+.handoff .hh{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);padding:var(--s4) var(--s5);
+  background:var(--wash);border-bottom:1px solid var(--line)}
+.handoff .hh .from,.handoff .hh .to{font-size:12.5px;font-weight:800;padding:5px 13px;
+  border-radius:var(--r4)}
+.handoff .hh .from{background:var(--violet-l);color:#6D28D9}
+.handoff .hh .to{background:var(--cyan-l);color:#0369A1}
+.handoff .hh .ar{color:var(--acc);font-size:19px;font-weight:700}
+.handoff .hh b{font-size:15px;flex:1 1 200px}
+.handoff .hb{padding:var(--s4) var(--s5)}
+.handoff .hb ul{margin:0}
+
+.clock{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:var(--s3);
+  margin-bottom:var(--s5)}
+.slot{border-radius:var(--r2);padding:var(--s4);border:2px solid var(--line);background:#fff}
+.slot .t{font-size:11px;font-weight:800;letter-spacing:1.4px;color:var(--muted);margin-bottom:5px}
+.slot b{display:block;font-size:15px;margin-bottom:4px}
+.slot small{font-size:12.5px;color:var(--gray);line-height:1.5}
+.slot.ph{background:var(--cyan-l);border-color:#B9E3FA}
+.slot.ov{background:var(--lime-l);border-color:#CDE8A8}
+.slot.us{background:var(--violet-l);border-color:#D5CBFB}
+
+.trig{display:inline-block;font-family:var(--mono);font-size:12.5px;background:var(--navy);
+  color:#CBEF9E;padding:6px 13px;border-radius:var(--r1);margin:3px 5px 3px 0}
+</style>
+</head>
+<body>
+
+<div id="bar"></div>
+<div id="confetti"></div>
+
+<div class="topbar">
+  <div class="brand"><span class="dot"></span>People<span>Processes</span></div>
+  <nav class="sitenav">
+    <a href="index.html">Home</a>
+    <a href="playbook.html">Playbook</a>
+    <a href="skills.html">Claude skills</a>
+    <a href="collaboration.html" class="here">Collaboration</a>
+  </nav>
+  <div class="chip-v">v1.0 · Internal</div>
+</div>
+
+<div class="docwrap" style="--acc:var(--cyan);--acc-l:var(--cyan-l);--acc-d:#0369A1">
+  <div class="crumb"><a href="index.html">Engineering docs</a> &nbsp;/&nbsp; Collaboration SOP</div>
+
+  <div class="sechead">
+    <div class="secnum">SOP</div>
+    <div><div class="sectag">Working agreement</div><h2>Dolie + Lucky</h2></div>
+  </div>
+
+  <p class="lead">How the two of you work together on internal product builds: who owns what, what has
+  to be true at each handoff, how the day runs across Philippines and US hours, and how you split
+  AI-assisted work without both building the same thing.</p>
+
+  <div class="callout c-info">
+    <span class="tag">Status</span>
+    <p><b>Draft for confirmation.</b> Rhamy owns the roles and decision rights in section 1. Dolie and
+    Lucky own the cadence in section 3 and should adjust the times to what they will actually keep.
+    Everything else follows the App Development Playbook and does not change locally.</p>
+  </div>
+
+  <!-- ═══ 1 ROLES ═══ -->
+  <h3>1 · Roles and decision rights</h3>
+  <p>Two people, three roles. Dolie carries two of them, which works only if the boundary between them
+  stays explicit.</p>
+
+  <div class="roles">
+    <div class="role r-d">
+      <div class="av">D</div>
+      <h4>Dolie</h4>
+      <div class="who">Spec writer and verifier</div>
+      <ul>
+        <li>Writes PRDs and item descriptions</li>
+        <li>Writes acceptance criteria</li>
+        <li>Keeps the board honest: epics, releases, tags, duplicates</li>
+        <li>Verifies items in staging against every criterion</li>
+        <li>Writes the release note line on each item as it passes Done</li>
+        <li>Escalates open decisions to Rhamy</li>
+      </ul>
+    </div>
+    <div class="role r-l">
+      <div class="av">L</div>
+      <h4>Lucky</h4>
+      <div class="who">Builder</div>
+      <ul>
+        <li>Estimates items entering Ready</li>
+        <li>Builds, using AI tools as she chooses</li>
+        <li>Self-reviews the diff before In Review</li>
+        <li>Deploys to staging and names what to test</li>
+        <li>Flags scope and technical risk early</li>
+        <li>Writes the consolidated release note for each release</li>
+        <li>Owns the repo, branches and environments</li>
+      </ul>
+    </div>
+    <div class="role r-r">
+      <div class="av">R</div>
+      <h4>Rhamy</h4>
+      <div class="who">Product owner</div>
+      <ul>
+        <li>Sets priority and backlog order</li>
+        <li>Rules on decision gates</li>
+        <li>Approves releases</li>
+        <li>Approves anything touching money, client data or compliance</li>
+      </ul>
+    </div>
+  </div>
+
+  <h4>Decision rights, so nothing waits on the wrong person</h4>
+  <div class="tablewrap"><table>
+    <tr><th>Decision</th><th>Decides</th><th>Consulted</th></tr>
+    <tr><td>What we build next</td><td>Rhamy</td><td>Dolie</td></tr>
+    <tr><td>What "done" means for an item</td><td>Dolie, in the acceptance criteria</td><td>Lucky, before Ready</td></tr>
+    <tr><td>How it gets built</td><td>Lucky</td><td>Nobody, unless it changes the criteria</td></tr>
+    <tr><td>Estimate</td><td>Lucky</td><td>Dolie, if it changes the release</td></tr>
+    <tr><td>Whether an item passes Ready</td><td>Dolie</td><td>Lucky</td></tr>
+    <tr><td>Whether an item passes Done</td><td>Dolie, by verifying</td><td>Lucky</td></tr>
+    <tr><td>Scope change mid-build</td><td>Dolie, if the criteria hold. Rhamy, if they do not</td><td>Lucky raises it</td></tr>
+    <tr><td>Library, framework or architecture choice</td><td>Lucky</td><td>Rhamy if it costs money or locks us in</td></tr>
+    <tr><td>Anything touching money, client data or compliance</td><td>Rhamy</td><td>Both</td></tr>
+    <tr><td>The wording of a release note line</td><td>Dolie, per item, at verification</td><td>Lucky</td></tr>
+    <tr><td>The consolidated release note</td><td>Lucky, assembled from what shipped</td><td>Dolie reviews before it goes out</td></tr>
+    <tr><td>Release goes out</td><td>Rhamy, or Dolie when Rhamy has pre-approved the release</td><td>Lucky</td></tr>
+  </table></div>
+
+  <div class="callout c-warn">
+    <span class="tag">The one conflict to watch</span>
+    <p>Dolie writes the criteria and also verifies against them. That is efficient and it is also a
+    blind spot: a criterion written vaguely will be verified vaguely by the same person. The guard is
+    <b>Lucky challenges the criteria before the item enters Ready</b>, not after the build. If a
+    criterion does not tell her exactly what she has to make true, she says so then.</p>
+  </div>
+
+  <!-- ═══ 2 HANDOFFS ═══ -->
+  <h3>2 · The four handoffs</h3>
+  <p>Work crosses between the two of you four times. Each crossing has a contract: things that must be
+  true before it moves. A handoff missing its contract bounces back, and that is not a criticism, it
+  is the process working.</p>
+
+  <div class="handoff" style="--acc:var(--violet)">
+    <div class="hh"><span class="from">Dolie</span><span class="ar">&#8594;</span><span class="to">Lucky</span>
+      <b>Handoff 1 · Spec to estimate</b></div>
+    <div class="hb">
+      <p style="font-size:14px"><b>Dolie hands over:</b> a drafted item or PRD with goal, why it
+      matters, current and desired behavior, acceptance criteria, out of scope, and do not break.</p>
+      <p style="font-size:14px;margin-bottom:6px"><b>Lucky replies with:</b></p>
+      <ul style="font-size:14px;margin:0">
+        <li>An estimate, or a request to split if it is 13 or above</li>
+        <li>Any criterion she cannot verify from the wording</li>
+        <li>Any technical dependency the spec missed</li>
+        <li>Any "do not break" item the spec should have listed and did not</li>
+      </ul>
+      <p style="font-size:14px;margin:var(--s3) 0 0"><b>Target:</b> replied to within one working day.
+      An item can sit in Backlog indefinitely; an item waiting on an estimate blocks a release plan.</p>
+    </div>
+  </div>
+
+  <div class="handoff" style="--acc:var(--lime)">
+    <div class="hh"><span class="from">Dolie</span><span class="ar">&#8594;</span><span class="to">Lucky</span>
+      <b>Handoff 2 · Ready to build</b></div>
+    <div class="hb">
+      <p style="font-size:14px"><b>Contract:</b> the item passes all twelve Definition of Ready checks.
+      Epic linked, release set, owner set, priority set, estimated, no open decision gates,
+      dependencies linked, not a duplicate.</p>
+      <p style="font-size:14px;margin:0"><b>What this buys:</b> Lucky never has to stop mid-build to
+      hunt for an answer, and Dolie never has to reconstruct what she meant a week later. If an item
+      reaches In Progress and a question appears anyway, that is a signal the Ready gate was rushed,
+      and it is worth saying so out loud.</p>
+    </div>
+  </div>
+
+  <div class="handoff" style="--acc:var(--cyan)">
+    <div class="hh"><span class="from">Lucky</span><span class="ar">&#8594;</span><span class="to">Dolie</span>
+      <b>Handoff 3 · Build to verify</b></div>
+    <div class="hb">
+      <p style="font-size:14px;margin-bottom:6px"><b>Lucky posts a <code>HANDOFF:</code> comment
+      naming:</b></p>
+      <ul style="font-size:14px;margin:0">
+        <li>Where it is deployed, and the URL or environment</li>
+        <li>Which acceptance criteria are ready to check</li>
+        <li>Any test account, seeded data or setup needed to reach the flow</li>
+        <li>Anything she already knows will fail, and why</li>
+        <li>The AI build record, if a tool built it</li>
+      </ul>
+      <p style="font-size:14px;margin:var(--s3) 0 0"><b>Contract:</b> the self-review checklist has
+      been run and the branch is merged or ready to merge. "It should work" is not a handoff. If Lucky
+      has not opened the flow herself since the last change, it is not ready to hand over.</p>
+    </div>
+  </div>
+
+  <div class="handoff" style="--acc:var(--mint)">
+    <div class="hh"><span class="from">Dolie</span><span class="ar">&#8594;</span><span class="to">Lucky</span>
+      <b>Handoff 4 · Verify result</b></div>
+    <div class="hb">
+      <p style="font-size:14px"><b>Dolie posts a <code>TESTED:</code> comment,</b> criterion by
+      criterion. Not "looks good" and not "still broken." Which numbers passed, which failed, and for
+      each failure what she did and what she saw.</p>
+      <p style="font-size:14px;margin:0"><b>If everything passes:</b> she completes the Definition of
+      Done, sets the completion date, attaches the release, writes the release note line and moves it
+      to Done. <b>If anything fails:</b> the item goes back to In Progress with the failing criteria
+      named. It does not go back with a new criterion attached, because that is a new item.</p>
+    </div>
+  </div>
+
+  <div class="callout c-tip">
+    <span class="tag">The rule that makes all four work</span>
+    <p>Every handoff happens <b>in a comment on the item</b>, not in chat. Chat is for nudging someone
+    to go look at the item. The item is where the record lives, because in three months the chat is
+    unfindable and the item is not.</p>
+  </div>
+
+  <!-- ═══ 3 CADENCE ═══ -->
+  <h3>3 · The daily rhythm</h3>
+  <p>Dolie and Lucky both work Philippines hours, so they share a full working day. Rhamy is in the
+  United States, so anything needing him is overnight async. The whole cadence follows from that one
+  fact.</p>
+
+  <div class="clock">
+    <div class="slot ph">
+      <div class="t">PH MORNING</div>
+      <b>Read the board</b>
+      <small>Anything Rhamy answered overnight is waiting. Dolie clears rulings into the items they
+      unblock. Lucky picks up whatever became Ready.</small>
+    </div>
+    <div class="slot ov">
+      <div class="t">PH MIDDAY</div>
+      <b>Sync window</b>
+      <small>The two of you overlap fully. Estimates, criteria challenges, anything needing a real
+      conversation happens here rather than in a comment thread.</small>
+    </div>
+    <div class="slot ph">
+      <div class="t">PH AFTERNOON</div>
+      <b>Build and verify</b>
+      <small>Heads-down. Handoffs 3 and 4 land here so nothing waits a full day for a check.</small>
+    </div>
+    <div class="slot us">
+      <div class="t">PH END OF DAY</div>
+      <b>Queue for Rhamy</b>
+      <small>Everything needing a ruling gets posted before you log off, so it lands at the start of
+      his day and is answered by your morning.</small>
+    </div>
+  </div>
+
+  <h4>The rhythm in rules</h4>
+  <ul>
+    <li><b>Queue anything for Rhamy before you log off.</b> A question raised at the start of your day
+    and a question raised at the end of it both get answered at the same time. Raising it early
+    changes nothing; raising it late costs a day.</li>
+    <li><b>Batch the asks.</b> One message with four decisions beats four messages with one each.</li>
+    <li><b>Never sit idle waiting on a ruling.</b> Tag the item <code>needs-decision</code>, leave it
+    in Backlog, and pull the next Ready item.</li>
+    <li><b>The weekly checkpoint is thirty minutes,</b> walking the board right to left. Section 05 of
+    the playbook has the agenda. If it runs long, the board was inaccurate, and fixing that is the
+    real outcome of the meeting.</li>
+  </ul>
+
+  <h4>Response times</h4>
+  <div class="tablewrap"><table>
+    <tr><th>Situation</th><th>Response expected</th></tr>
+    <tr><td>Production is down or a client is blocked</td><td>Immediately, interrupt whatever is in progress, and tell Rhamy the same day</td></tr>
+    <tr><td>Blocked and cannot continue</td><td>Same working day, from whoever can unblock</td></tr>
+    <tr><td>Handoff 3, ready to verify</td><td>Same working day where possible, next morning at the latest</td></tr>
+    <tr><td>Handoff 1, estimate request</td><td>One working day</td></tr>
+    <tr><td>A question on an item nobody is blocked on</td><td>Two working days</td></tr>
+    <tr><td>Anything needing Rhamy</td><td>Next PH morning, if it was queued before end of day</td></tr>
+  </table></div>
+
+  <div class="callout c-warn">
+    <span class="tag">Blocked is a state, not a mood</span>
+    <p>The moment you cannot continue, post a <code>BLOCKED:</code> comment naming what you need and
+    who can give it. Do not wait to see whether it resolves itself, and do not carry it silently to
+    the next sync. An unposted blocker is invisible, and invisible blockers are what turn a two-day
+    item into a two-week one.</p>
+  </div>
+
+  <!-- ═══ 4 AI PAIRING ═══ -->
+  <h3>4 · Splitting AI-assisted work</h3>
+  <p>Both of you use AI tools. That creates two failure modes worth naming: <b>collision</b>, where you
+  both generate a version of the same thing, and <b>unreviewed acceptance</b>, where generated code
+  lands because it looked finished. The rules below exist for those two.</p>
+
+  <div class="grid2">
+    <div class="card" style="border-top:5px solid var(--violet)">
+      <h4>Dolie prompts for</h4>
+      <ul style="margin:0;font-size:14px">
+        <li>PRDs and item descriptions</li>
+        <li>Acceptance criteria drafts</li>
+        <li>Release notes</li>
+        <li>The two Sprints skills, for filing and decomposition</li>
+        <li>Research and comparison work</li>
+      </ul>
+      <p style="margin:var(--s3) 0 0;font-size:13px;color:var(--muted)"><b>Not the consolidated
+      release note.</b> Dolie writes the one-line entry on each item at verification. Lucky assembles
+      the release note itself, from what actually shipped.</p>
+      <p style="margin:var(--s3) 0 0;font-size:13.5px;color:var(--muted)">She owns the spec the build
+      tool receives.</p>
+    </div>
+    <div class="card" style="border-top:5px solid var(--cyan)">
+      <h4>Lucky prompts for</h4>
+      <ul style="margin:0;font-size:14px">
+        <li>Implementation, from the approved spec</li>
+        <li>Refactors and migrations</li>
+        <li>Test scaffolding</li>
+        <li>Debugging and error investigation</li>
+      </ul>
+      <p style="margin:var(--s3) 0 0;font-size:13.5px;color:var(--muted)">He owns the code the tool
+      produces, including the parts she did not type.</p>
+    </div>
+  </div>
+
+  <h4>The seven rules</h4>
+  <ol>
+    <li><b>One spec, one owner.</b> The item description and the PRD are Dolie's. If Lucky needs the
+    spec changed to build it, Lucky says so and Dolie changes it. Lucky does not fork a different
+    version into a prompt, because then two specs exist and only one is on the board.</li>
+    <li><b>Nobody starts a build that is not in In Progress with their name on it.</b> That is the
+    entire collision guard. Check the board before you prompt.</li>
+    <li><b>The prompt gets attached.</b> Every AI-built item carries the <code>NOTE: AI build
+    record</code> comment with the tool, the date, the spec handed over, and any deviation kept. The
+    question in three months is "what did we ask for," and this is the only place with the answer.</li>
+    <li><b>Generated code is reviewed by a person before In Review.</b> Lucky reads the whole diff
+    against the acceptance criteria, not against her memory of the prompt. Deletions get the most
+    attention.</li>
+    <li><b>The AI never closes the loop.</b> A tool reporting success is a claim. Dolie verifies in
+    staging, criterion by criterion, and posts <code>TESTED:</code>. This does not scale down for small
+    items.</li>
+    <li><b>Scope creep from a tool is scope creep.</b> If a one-line fix came back touching nine files,
+    that needs an explanation on the item before it merges, not after.</li>
+    <li><b>Nothing confidential goes into a prompt.</b> No client data, no employee data, no
+    credentials, no production database contents. If a key was ever pasted into a tool, it gets
+    rotated.</li>
+  </ol>
+
+  <div class="callout c-ai">
+    <span class="tag">Why the split works this way</span>
+    <p>When AI writes the code, the spec is the engineering artifact and the code is the output. That
+    puts the highest-leverage work at the front, with Dolie, and the highest-risk review at the back,
+    with Lucky. Reversing it, where the builder writes the spec they then build from, removes the only
+    independent check in a two-person team.</p>
+  </div>
+
+  <!-- ═══ 5 EDGE CASES ═══ -->
+  <h3>5 · When things do not go to plan</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Situation</th><th>What happens</th></tr>
+    <tr><td>Lucky disagrees with a criterion</td><td>He says so before Ready. If it still cannot be resolved, Rhamy rules. He does not build a different interpretation quietly</td></tr>
+    <tr><td>Dolie finds a defect while verifying that is outside the criteria</td><td>New Bug, linked to the item. The original item is judged only against its own criteria</td></tr>
+    <tr><td>Scope grows mid-build</td><td>Lucky posts <code>BLOCKED:</code> or <code>QUESTION:</code>. Dolie edits the description first, then posts <code>DECISION:</code>. If it changes the release, Rhamy decides</td></tr>
+    <tr><td>An item bounces back twice</td><td>Stop and talk in the sync window. Two bounces means the criteria are ambiguous, not that the build is careless</td></tr>
+    <tr><td>Someone is out sick or on leave</td><td>Post it on the item before you go, not in chat. Anything In Progress goes back to Ready with a comment on where it stands</td></tr>
+    <tr><td>Production breaks after a release</td><td>Roll back first, diagnose after. File the Bug, tell Rhamy the same day, and note the cause on the release</td></tr>
+    <tr><td>Rhamy is unreachable and something is blocked</td><td>If it is reversible and low risk, make the call, document it as <code>DECISION:</code> with who made it, and flag it for review. If it touches money, client data or compliance, it waits</td></tr>
+    <tr><td>You both worked on the same thing</td><td>Keep the version matching the spec, close the other, and note on the item how the collision happened so rule 2 gets tightened</td></tr>
+  </table></div>
+
+  <!-- ═══ 6 CHECKLIST ═══ -->
+  <h3>6 · The agreement, as a checklist</h3>
+  <p>Tick through it once together at first read. Anything you cannot honestly tick is worth talking
+  about before it becomes a habit.</p>
+
+  <div class="checkblock" id="collab-block" style="max-width:720px">
+    <div class="checkhead">
+      <svg class="ring" width="62" height="62" viewBox="0 0 62 62" aria-hidden="true">
+        <circle cx="31" cy="31" r="26" fill="none" stroke="#E7EAEE" stroke-width="7"/>
+        <circle id="collab-ring" cx="31" cy="31" r="26" fill="none" stroke="#0EA5E9" stroke-width="7"
+          stroke-linecap="round" stroke-dasharray="163.4" stroke-dashoffset="163.4"
+          transform="rotate(-90 31 31)"/>
+        <text id="collab-num" x="31" y="36" text-anchor="middle">0%</text>
+      </svg>
+      <div>
+        <h4 style="margin:0">Both of us agree</h4>
+        <p style="margin:2px 0 0;font-size:13px;color:var(--muted)">Twelve commitments</p>
+      </div>
+    </div>
+    <ul class="checklist" data-ring="collab"
+        data-pass="Agreed. This is how we work."
+        data-fail="Talk through the unticked ones before you start.">
+      <li><label><input type="checkbox"><span>Every request enters as an item on the board, never as a chat message</span></label></li>
+      <li><label><input type="checkbox"><span>Every handoff happens in a comment on the item, with a prefix</span></label></li>
+      <li><label><input type="checkbox"><span>Lucky challenges any criterion she cannot verify, before Ready and not after</span></label></li>
+      <li><label><input type="checkbox"><span>No item enters In Progress until it passes all twelve Ready checks</span></label></li>
+      <li><label><input type="checkbox"><span>No more than three items in progress at once</span></label></li>
+      <li><label><input type="checkbox"><span>Handoff 3 names where to test and what to check</span></label></li>
+      <li><label><input type="checkbox"><span>Verification is criterion by criterion, never "looks good"</span></label></li>
+      <li><label><input type="checkbox"><span>Nothing reaches Done on an AI's report</span></label></li>
+      <li><label><input type="checkbox"><span>Every AI-built item carries the build record and the prompt</span></label></li>
+      <li><label><input type="checkbox"><span>Blockers get posted the moment they appear, not at the next sync</span></label></li>
+      <li><label><input type="checkbox"><span>Anything needing Rhamy is queued before end of day, batched</span></label></li>
+      <li><label><input type="checkbox"><span>No client data, employee data or credentials in any prompt</span></label></li>
+    </ul>
+    <div class="gate" id="collab-gate">Talk through the unticked ones before you start.</div>
+  </div>
+
+  <!-- ═══ 7 OPEN ═══ -->
+  <h3>7 · Open items before this is final</h3>
+  <div class="callout c-warn">
+    <span class="tag">Needs confirming</span>
+    <ul style="margin:var(--s2) 0 0">
+      <li><b>The sync window time.</b> Section 3 says "PH midday." Pick a real time you will both
+      keep.</li>
+      <li><b>Staging.</b> Handoffs 3 and 4 assume a staging environment exists with fake data and that
+      Dolie can reach it. Confirm what exists today and correct section 2 if it does not.</li>
+      <li><b>Release approval.</b> The table says Rhamy, or Dolie on a pre-approved release. Confirm
+      whether Dolie ever releases alone.</li>
+      <li><b>The weekly checkpoint slot.</b> Thirty minutes, day and time to be set.</li>
+      <li><b>Rhamy's unreachable window.</b> Section 5 lets a reversible low-risk call be made without
+      him. Confirm he wants that, and what counts as low risk.</li>
+    </ul>
+  </div>
+
+  <p class="creed" style="margin-top:var(--s7)">A work item is a <b>request</b> for work, written
+  <b>before</b> the work happens, in enough detail that a second person can build it and a third
+  person can confirm it works.</p>
+
+  <div class="pagefoot">
+    <span>People Processes · Collaboration SOP v1.0 draft · Internal use only</span>
+    <a href="playbook.html">Back to the Playbook &#8594;</a>
+  </div>
+</div>
+
+<button class="toTop" id="toTop" type="button" aria-label="Back to top">&uarr;</button>
+<script>
+/* People Processes engineering docs — shared behaviour.
+   Every widget is guarded, so any page can load this file and only
+   the parts it actually contains will initialise. */
+(function () {
+"use strict";
+
+var $  = function (s, r) { return (r || document).querySelector(s); };
+var $$ = function (s, r) { return [].slice.call((r || document).querySelectorAll(s)); };
+var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ─────────── confetti (used by several widgets) ─────────── */
+var COLORS = ['#84C444', '#10B981', '#0EA5E9', '#8B5CF6', '#EC4899', '#F59E0B'];
+function celebrate() {
+  var host = $('#confetti');
+  if (!host || reduced) return;
+  host.classList.add('on');
+  host.innerHTML = '';
+  for (var i = 0; i < 70; i++) {
+    var c = document.createElement('div');
+    c.className = 'conf';
+    c.style.left = Math.random() * 100 + 'vw';
+    c.style.top = '-20px';
+    c.style.background = COLORS[i % COLORS.length];
+    c.style.animationDuration = (1.6 + Math.random() * 1.4) + 's';
+    c.style.animationDelay = (Math.random() * 0.4) + 's';
+    host.appendChild(c);
+  }
+  setTimeout(function () { host.classList.remove('on'); host.innerHTML = ''; }, 3400);
+}
+
+/* ─────────── reading progress + back to top ─────────── */
+(function () {
+  var bar = $('#bar'), toTop = $('#toTop');
+  if (!bar && !toTop) return;
+  function prog() {
+    var h = document.documentElement;
+    var d = h.scrollHeight - h.clientHeight;
+    if (bar) bar.style.width = (d > 0 ? Math.min(100, h.scrollTop / d * 100) : 0) + '%';
+    if (toTop) toTop.classList.toggle('on', h.scrollTop > 600);
+  }
+  if (toTop) toTop.addEventListener('click', function () {
+    window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
+  });
+  window.addEventListener('scroll', prog, { passive: true });
+  prog();
+})();
+
+/* ─────────── copy buttons ─────────── */
+$$('.copy').forEach(function (b) {
+  b.addEventListener('click', function () {
+    var el = document.getElementById(b.dataset.target);
+    if (!el) return;
+    var txt = el.innerText;
+    function done() {
+      b.textContent = 'Copied'; b.classList.add('done');
+      setTimeout(function () { b.textContent = 'Copy'; b.classList.remove('done'); }, 1400);
+    }
+    function fallback() {
+      var ta = document.createElement('textarea');
+      ta.value = txt; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); done(); } catch (e) {}
+      document.body.removeChild(ta);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(done, fallback);
+    } else { fallback(); }
+  });
+});
+
+/* ─────────── sidebar: filter, scrollspy, visited progress ─────────── */
+(function () {
+  var links = $$('.navlink');
+  if (!links.length) return;
+  var targets = links.map(function (a) { return document.getElementById(a.getAttribute('href').slice(1)); });
+  var visited = {};
+  var TR = $('#tour-ring'), TN = $('#tour-num'), TL = $('#tour-lbl'), TC = 119.4;
+
+  function updTour() {
+    if (!TR) return;
+    var n = Object.keys(visited).length, t = links.length;
+    TR.setAttribute('stroke-dashoffset', TC - TC * n / t);
+    if (TN) TN.textContent = Math.round(n / t * 100) + '%';
+    if (TL) TL.textContent = n + ' of ' + t + ' sections';
+    if (n === t) celebrate();
+  }
+  function spy() {
+    var best = 0;
+    for (var i = 0; i < targets.length; i++) {
+      if (targets[i] && targets[i].getBoundingClientRect().top <= 140) best = i;
+    }
+    links.forEach(function (a, i) { a.classList.toggle('active', i === best); });
+    var id = links[best].getAttribute('href').slice(1);
+    if (!visited[id]) { visited[id] = 1; links[best].classList.add('seen'); updTour(); }
+  }
+  window.addEventListener('scroll', spy, { passive: true });
+  spy();
+
+  var ns = $('#navsearch');
+  if (ns) {
+    ns.addEventListener('input', function (e) {
+      var q = e.target.value.toLowerCase();
+      links.forEach(function (a) {
+        a.style.display = a.textContent.toLowerCase().indexOf(q) > -1 ? '' : 'none';
+      });
+    });
+    document.addEventListener('keydown', function (e) {
+      var t = document.activeElement.tagName;
+      if (e.key === '/' && t !== 'INPUT' && t !== 'TEXTAREA' && t !== 'SELECT') {
+        e.preventDefault(); ns.focus();
+      }
+    });
+  }
+
+  var side = $('#side'), mb = $('#menubtn');
+  if (side && mb) {
+    mb.addEventListener('click', function () { side.classList.toggle('open'); });
+    links.forEach(function (a) {
+      a.addEventListener('click', function () { side.classList.remove('open'); });
+    });
+  }
+})();
+
+/* ─────────── flip cards ─────────── */
+$$('.flip').forEach(function (f) {
+  function t() { f.classList.toggle('on'); }
+  f.addEventListener('click', t);
+  f.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); t(); }
+  });
+});
+
+/* ─────────── item type decider ─────────── */
+(function () {
+  var s1 = $('#step1'), s2 = $('#step2'), dres = $('#dres'), dreset = $('#dreset');
+  if (!s1 || !s2 || !dres) return;
+  var R = {
+    bug:   ['Bug', 'Shipped behavior is wrong. Use the bug template. Steps to reproduce is the whole report, so write them even when the fix seems obvious. Set a severity. If a client reported it, tag it client-reported and set priority High.'],
+    story: ['Story', 'A user-visible outcome. Use the story template. Write three to seven acceptance criteria a person can click through and mark pass or fail.'],
+    task:  ['Task', 'Groundwork with no standalone user value. Use the task template and name the story waiting on it. A task that enables nothing is a task nobody needs.']
+  };
+  $$('#step1 .btn, #step2 .btn').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var a = b.dataset.a;
+      if (a === 'step2') { s1.style.display = 'none'; s2.style.display = ''; return; }
+      s1.style.display = 'none'; s2.style.display = 'none';
+      dres.innerHTML = '<div class="big">' + R[a][0] + '</div><p style="margin:0">' + R[a][1] + '</p>';
+      dres.classList.add('on');
+      if (dreset) dreset.style.display = '';
+    });
+  });
+  if (dreset) dreset.addEventListener('click', function () {
+    s1.style.display = ''; s2.style.display = 'none';
+    dres.classList.remove('on'); dreset.style.display = 'none';
+  });
+})();
+
+/* ─────────── checklists with progress rings ─────────── */
+$$('ul.checklist[data-ring]').forEach(function (list) {
+  var key = list.dataset.ring;
+  var ring = document.getElementById(key + '-ring');
+  var num = document.getElementById(key + '-num');
+  var gate = document.getElementById(key + '-gate');
+  var block = document.getElementById(key + '-block');
+  var boxes = $$('input', list);
+  if (!boxes.length) return;
+  var C = 163.4;
+  var pass = list.dataset.pass || 'Complete.';
+  var fail = list.dataset.fail || 'Not complete yet.';
+  var wasDone = false;
+  function upd() {
+    var n = boxes.filter(function (b) { return b.checked; }).length;
+    if (ring) ring.setAttribute('stroke-dashoffset', C - C * n / boxes.length);
+    if (num) num.textContent = Math.round(n / boxes.length * 100) + '%';
+    var ok = n === boxes.length;
+    if (gate) {
+      gate.textContent = ok ? pass : fail + '   (' + n + ' of ' + boxes.length + ')';
+      gate.classList.toggle('pass', ok);
+    }
+    if (block) block.classList.toggle('complete', ok);
+    if (ok && !wasDone) celebrate();
+    wasDone = ok;
+  }
+  boxes.forEach(function (b) { b.addEventListener('change', upd); });
+  upd();
+});
+
+/* ─────────── title fixer ─────────── */
+(function () {
+  var prompt = $('#tf-prompt'), opts = $('#tf-opts'), fb = $('#tf-fb'),
+      next = $('#tf-next'), scoreEl = $('#tf-score'), totalEl = $('#tf-total');
+  if (!prompt || !opts) return;
+
+  var TF = [
+    { bad: 'fixed the spinner thing on review',
+      opts: [
+        { t: 'Fix endless loading spinner when sending a policy for BP review', ok: true },
+        { t: 'fixed: spinner on review page', ok: false, why: 'Past tense, and "spinner on review page" is not searchable.' },
+        { t: 'Spinner issue', ok: false, why: 'No verb, no object, no qualifier. Nobody could act on this.' }
+      ],
+      good: 'Present tense verb, a specific object, and a qualifier naming the exact flow.' },
+    { bad: 'add the tab and then build the page and wire it up',
+      opts: [
+        { t: 'Add conditional posters tab to the client Posters screen', ok: true },
+        { t: 'Add tab; build page; wire API', ok: false, why: 'Three outcomes in one title. Half of it can pass, so it can never be marked done. Split it.' },
+        { t: 'Posters tab work', ok: false, why: 'No verb and no finish line.' }
+      ],
+      good: 'One outcome per item. The other two pieces become their own items.' },
+    { bad: 'improved mobile view (done)',
+      opts: [
+        { t: 'Make the BP dashboard usable at 375px width', ok: true },
+        { t: 'Improved mobile view (done)', ok: false, why: 'Past tense plus a status marker in the title. Status lives in the column.' },
+        { t: 'Mobile responsiveness', ok: false, why: 'A topic, not a request. No acceptance criterion can be written from it.' }
+      ],
+      good: 'Specific, present tense, and testable. 375px is something you can check.' },
+    { bad: 'update dashboard booking to use it',
+      opts: [
+        { t: 'Update dashboard booking to use the shared availability service', ok: true },
+        { t: 'update dashboard booking to use it', ok: false, why: 'Use what? In six months nobody will know what "it" referred to.' },
+        { t: 'Dashboard booking fix', ok: false, why: 'Vague, and it implies a bug without saying what is broken.' }
+      ],
+      good: 'Never leave a pronoun in a title. Name the thing.' }
+  ];
+  var i = 0, score = 0;
+  if (totalEl) totalEl.textContent = TF.length;
+
+  function render() {
+    var q = TF[i];
+    prompt.innerHTML = 'Someone filed: <b>"' + q.bad + '"</b>';
+    opts.innerHTML = '';
+    if (fb) { fb.className = 'fb'; fb.innerHTML = ''; }
+    if (next) next.style.display = 'none';
+    q.opts.forEach(function (o) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'opt'; b.textContent = o.t;
+      b.addEventListener('click', function () {
+        $$('.opt', opts).forEach(function (x) { x.disabled = true; });
+        if (o.ok) {
+          b.classList.add('right'); score++;
+          if (scoreEl) scoreEl.textContent = score;
+          if (fb) { fb.className = 'fb good on'; fb.innerHTML = '<b>Correct.</b> ' + q.good; }
+        } else {
+          b.classList.add('wrong');
+          $$('.opt', opts).forEach(function (x, ix) { if (q.opts[ix].ok) x.classList.add('right'); });
+          if (fb) { fb.className = 'fb bad on'; fb.innerHTML = '<b>Not this one.</b> ' + o.why; }
+        }
+        if (i < TF.length - 1) { if (next) next.style.display = ''; }
+        else if (fb) {
+          fb.innerHTML += '<br><br><b>That is all four.</b> Final score ' + score + ' of ' + TF.length + '.';
+          if (score === TF.length) celebrate();
+        }
+      });
+      opts.appendChild(b);
+    });
+  }
+  if (next) next.addEventListener('click', function () { i++; render(); });
+  render();
+})();
+
+/* ─────────── item builder ─────────── */
+(function () {
+  var bType = $('#b-type'), bTitle = $('#b-title'), bGoal = $('#b-goal'), bWhy = $('#b-why'),
+      bAc = $('#b-ac'), bOut = $('#b-out'), bBreak = $('#b-break'),
+      bCode = $('#b-out-code'), bWarn = $('#b-warn'),
+      bGoalLab = $('#b-goal-lab'), bWhyLab = $('#b-why-lab');
+  if (!bType || !bCode) return;
+
+  var PAST = /^(added|fixed|updated|improved|removed|created|changed|built|implemented|made)\b/i;
+  var EMOJI = /[←-➿☀-⛿]|[\uD800-\uDBFF][\uDC00-\uDFFF]/;
+
+  function build() {
+    var t = bType.value;
+    if (bGoalLab) bGoalLab.textContent =
+      t === 'bug'  ? 'Summary — what is wrong, one sentence' :
+      t === 'task' ? 'Goal — what this enables, and the story waiting on it' :
+                     'Goal — one sentence';
+    if (bWhyLab) bWhyLab.textContent =
+      t === 'bug' ? 'Environment and who is affected' : 'Why it matters';
+
+    var raw = bTitle ? bTitle.value : '';
+    var title = raw.trim();
+    var warns = [];
+    if (title) {
+      if (PAST.test(title)) warns.push('Title is past tense. The board holds requests, not a changelog.');
+      if (title.indexOf(';') > -1 || / and /i.test(title)) warns.push('Title covers more than one outcome. Split it into separate items.');
+      if (title.length > 90) warns.push('Title is ' + title.length + ' characters. Keep it under 90.');
+      if (EMOJI.test(title)) warns.push('Remove the emoji or arrow. Status lives in the column, not the title.');
+      if (title !== raw) warns.push('Title has leading or trailing whitespace.');
+    }
+    var ac = (bAc ? bAc.value : '').split('\n').map(function (x) { return x.trim(); }).filter(Boolean);
+    if (ac.length && ac.length < 3) warns.push('Only ' + ac.length + ' acceptance criterion. Aim for three to seven.');
+    if (ac.length > 7) warns.push(ac.length + ' acceptance criteria. That is usually two items.');
+    ac.forEach(function (l) {
+      if (/\b(well|better|nicely|properly|gracefully|improved|fast)\b/i.test(l)) {
+        warns.push('"' + l.slice(0, 42) + '..." is not testable. Say what a person checks.');
+      }
+    });
+    if (bWarn) {
+      bWarn.className = warns.length ? 'fb bad on' : 'fb';
+      bWarn.innerHTML = warns.length ? '<b>Check these:</b><br>' + warns.join('<br>') : '';
+    }
+
+    var goal = bGoal ? bGoal.value : '';
+    if (!title && !goal && !ac.length) {
+      bCode.textContent = 'Start typing above and your item appears here.';
+      return;
+    }
+    var L = [];
+    L.push('TITLE: ' + (title || '[title]'));
+    L.push('TYPE:  ' + t.charAt(0).toUpperCase() + t.slice(1));
+    L.push('');
+    if (t === 'bug') {
+      L.push('## Summary'); L.push(goal); L.push('');
+      L.push('## Environment'); L.push(bWhy ? bWhy.value : ''); L.push('');
+      L.push('## Steps to reproduce'); L.push('1.'); L.push('2.'); L.push('3.'); L.push('');
+      L.push('## Expected result'); L.push('');
+      L.push('## Actual result'); L.push('');
+    } else {
+      L.push('## Goal'); L.push(goal); L.push('');
+      L.push(t === 'task' ? '## What to do' : '## Why it matters');
+      L.push(bWhy ? bWhy.value : ''); L.push('');
+      if (t === 'story') {
+        L.push('## Current behavior'); L.push('1.'); L.push('');
+        L.push('## Desired behavior'); L.push('1.'); L.push('');
+      }
+    }
+    L.push('## Acceptance criteria');
+    if (ac.length) { ac.forEach(function (l) { L.push('- [ ] ' + l); }); }
+    else { L.push('- [ ] '); }
+    L.push('');
+    if (bOut && bOut.value) { L.push('## Out of scope'); L.push('- ' + bOut.value); L.push(''); }
+    if (bBreak && bBreak.value) { L.push('## Do not break'); L.push('- ' + bBreak.value); L.push(''); }
+    L.push('## Source references'); L.push('- ');
+    bCode.textContent = L.join('\n');
+  }
+
+  [bType, bTitle, bGoal, bWhy, bAc, bOut, bBreak].forEach(function (el) {
+    if (!el) return;
+    el.addEventListener('input', build);
+    el.addEventListener('change', build);
+  });
+  build();
+})();
+
+/* ─────────── glossary filter ─────────── */
+(function () {
+  var input = $('#gsearch'), list = $('#glist');
+  if (!input || !list) return;
+  var items = $$('#glist > div'), none = $('#gnone');
+  input.addEventListener('input', function (e) {
+    var q = e.target.value.toLowerCase(), shown = 0;
+    items.forEach(function (d) {
+      var hit = d.textContent.toLowerCase().indexOf(q) > -1;
+      d.style.display = hit ? '' : 'none';
+      if (hit) shown++;
+    });
+    if (none) none.style.display = shown ? 'none' : '';
+  });
+})();
+
+/* ─────────── quiz ─────────── */
+(function () {
+  var qC = $('#q-counter'), qT = $('#q-text'), qO = $('#q-opts'), qF = $('#q-fb'),
+      qN = $('#q-next'), qR = $('#q-restart'), qRes = $('#q-result');
+  if (!qT || !qO) return;
+
+  var QZ = [
+    { q: 'A client reports that clicking Send for Review spins forever in production. What do you file?',
+      o: ['A Bug, priority High, tagged client-reported', 'A Story, because the feature needs work', 'A Task, because it is a code fix', 'A PRD, because it affects a client'],
+      a: 0, w: 'Shipped behavior is wrong and a user can reach it, so it is a Bug. A client blocked in production takes the express lane.' },
+    { q: 'What is the difference between an epic and a release?',
+      o: ['An epic groups by what the work is; a release groups by when it ships', 'An epic is bigger than a release', 'A release is a group of epics', 'They are the same thing named differently'],
+      a: 0, w: 'An epic can span several releases, and a release can pull items from several epics.' },
+    { q: 'Which of these is a testable acceptance criterion?',
+      o: ['Clearing the search box restores the full list', 'Search works well', 'The list loads faster', 'Errors are handled gracefully'],
+      a: 0, w: 'A person can click it and mark pass or fail without interpretation. The other three all require an opinion.' },
+    { q: 'An item is estimated at 13 points. What happens?',
+      o: ['Split it before it is started', 'Schedule it across two weeks', 'Assign it to two people', 'Move it to the top of the backlog'],
+      a: 0, w: 'Too big to size is too big to specify, and too big to specify is impossible to verify.' },
+    { q: 'You only have a screenshot of the defect. What do you put in the description?',
+      o: ['Steps and expected result in words, with the screenshot attached and captioned', 'The screenshot on its own, since it shows everything', 'A link to the chat where it was reported', 'Nothing, and explain it verbally'],
+      a: 0, w: 'An image supplements words, never replaces them. A screenshot-only description is unsearchable and does not survive an export.' },
+    { q: 'An AI tool reports it finished the build and all tests pass. Can the item move to Done?',
+      o: ['No. A person opens the running app and walks every criterion first', 'Yes, if the tests it wrote pass', 'Yes, if the code was merged', 'Only if the item is small'],
+      a: 0, w: 'A report is a claim, not a verification. The verification gate does not scale down for small items.' },
+    { q: 'Scope changes halfway through the build. What do you do first?',
+      o: ['Edit the description, then post a DECISION: comment', 'Post a comment and leave the description as it was', 'Close the item and file a new one', 'Finish the original scope, then decide'],
+      a: 0, w: 'The description always holds the current truth. A description of an abandoned plan is worse than none, because it is confidently wrong.' },
+    { q: 'Which title follows the convention?',
+      o: ['Add search bar to handbook list filtered by handbook name', 'improved handbook search (done)', 'Handbook search', 'Add search; fix sorting; update the header'],
+      a: 0, w: 'Verb, object, qualifier. Present tense, one outcome, no status marker, specific enough to find by search later.' }
+  ];
+  var i = 0, score = 0;
+
+  function render() {
+    var item = QZ[i];
+    if (qC) qC.textContent = 'Question ' + (i + 1) + ' of ' + QZ.length;
+    qT.textContent = item.q;
+    qO.innerHTML = '';
+    if (qF) { qF.className = 'fb'; qF.innerHTML = ''; }
+    if (qN) qN.style.display = 'none';
+    if (qR) qR.style.display = 'none';
+    if (qRes) qRes.classList.remove('on');
+    item.o.forEach(function (text, idx) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'opt'; b.textContent = text;
+      b.addEventListener('click', function () {
+        $$('.opt', qO).forEach(function (x, ix) {
+          x.disabled = true;
+          if (ix === item.a) x.classList.add('right');
+        });
+        if (idx === item.a) {
+          score++;
+          if (qF) { qF.className = 'fb good on'; qF.innerHTML = '<b>Correct.</b> ' + item.w; }
+        } else {
+          b.classList.add('wrong');
+          if (qF) { qF.className = 'fb bad on'; qF.innerHTML = '<b>Not quite.</b> ' + item.w; }
+        }
+        if (i < QZ.length - 1) { if (qN) qN.style.display = ''; }
+        else { finish(); }
+      });
+      qO.appendChild(b);
+    });
+  }
+  function finish() {
+    if (!qRes) return;
+    var msg = score >= 7 ? 'You are ready to file real work.'
+      : score >= 6 ? 'Good. Skim section 09 and you are set.'
+      : score >= 4 ? 'Worth a second pass through sections 06 to 09.'
+      : 'Start again at section 00. It reads quickly.';
+    qRes.innerHTML = '<div class="big">' + score + ' of ' + QZ.length + '</div><p style="margin:0">' + msg + '</p>';
+    qRes.classList.add('on');
+    if (qR) qR.style.display = '';
+    if (score >= 7) celebrate();
+  }
+  if (qN) qN.addEventListener('click', function () { i++; render(); });
+  if (qR) qR.addEventListener('click', function () { i = 0; score = 0; render(); });
+  render();
+})();
+
+})();
+</script>
+</body>
+</html>
